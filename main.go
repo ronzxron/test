@@ -42,20 +42,20 @@ func main() {
 	w.Resize(fyne.NewSize(500, 400)) // 设置窗口初始大小
 
 	ui := &SystemInfoUI{
-		hostnameLabel:  widget.NewLabel(""),
-		osLabel:        widget.NewLabel(""),
-		archLabel:      widget.NewLabel(""),
-		cpuNameLabel:   widget.NewLabel(""),
-		cpuCoresLabel:  widget.NewLabel(""),
-		memTotalLabel:  widget.NewLabel(""),
-		memUsedLabel:   widget.NewLabel(""),
-		memFreeLabel:   widget.NewLabel(""),
-		diskTotalLabel: widget.NewLabel(""),
-		diskUsedLabel:  widget.NewLabel(""),
-		diskFreeLabel:  widget.NewLabel(""),
-		userLabel:      widget.NewLabel(""),
-		uptimeLabel:    widget.NewLabel(""),
-		timeLabel:      widget.NewLabel(""),
+		hostnameLabel:  widget.NewLabel("..."),
+		osLabel:        widget.NewLabel("..."),
+		archLabel:      widget.NewLabel("..."),
+		cpuNameLabel:   widget.NewLabel("..."),
+		cpuCoresLabel:  widget.NewLabel("..."),
+		memTotalLabel:  widget.NewLabel("..."),
+		memUsedLabel:   widget.NewLabel("..."),
+		memFreeLabel:   widget.NewLabel("..."),
+		diskTotalLabel: widget.NewLabel("..."),
+		diskUsedLabel:  widget.NewLabel("..."),
+		diskFreeLabel:  widget.NewLabel("..."),
+		userLabel:      widget.NewLabel("..."),
+		uptimeLabel:    widget.NewLabel("..."),
+		timeLabel:      widget.NewLabel("..."),
 	}
 
 	// 使用 Form 布局来美化信息的展示
@@ -81,19 +81,18 @@ func main() {
 	// 将 Form 放到一个可滚动的容器中，以防信息过多超出窗口
 	scrollContainer := container.NewVScroll(form)
 	
-	// 更新信息的函数
-	updateInfo := func() {
-		updateSystemInfo(ui)
-	}
+	// 首次更新信息 (在主线程上)
+	updateSystemInfo(ui)
 
-	// 首次更新信息
-	updateInfo()
-
+	// 【关键修正 1】
 	// 定时更新信息 (每5秒)
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		for range ticker.C {
-			updateInfo()
+			// 使用 App.RunOnMain 来确保 UI 更新在主线程上执行
+			fyne.CurrentApp().RunOnMain(func() {
+				updateSystemInfo(ui)
+			})
 		}
 	}()
 
@@ -125,28 +124,28 @@ func updateSystemInfo(ui *SystemInfoUI) {
 	}
 	
 	// 内存信息
-	vMem, err := mem.VirtualMemory()
+	vMem, err := mem。VirtualMemory()
 	if err == nil {
-		ui.memTotalLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(vMem.Total)))
-		ui.memUsedLabel.SetText(fmt.Sprintf("%.2f GB (%.2f%%)", byteToGB(vMem.Used), vMem.UsedPercent))
-		ui.memFreeLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(vMem.Free)))
+		ui。memTotalLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(vMem。Total)))
+		ui。memUsedLabel。SetText(fmt。Sprintf("%.2f GB (%.2f%%)", byteToGB(vMem。Used), vMem。UsedPercent))
+		ui。memFreeLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(vMem。Free)))
 	} else {
-		ui.memTotalLabel.SetText("获取失败")
+		ui。memTotalLabel。SetText("获取失败")
 		ui.memUsedLabel.SetText("获取失败")
-		ui.memFreeLabel.SetText("获取失败")
+		ui。memFreeLabel。SetText("获取失败")
 	}
 
 	// 磁盘信息 (只取根分区或第一个分区)
-	partitions, err := disk.Partitions(false) // false表示不包含CD-ROM等
+	partitions, err := disk。Partitions(false) // false表示不包含CD-ROM等
 	if err == nil && len(partitions) > 0 {
-		usage, err := disk.Usage(partitions[0].Mountpoint)
+		usage, err := disk。Usage(partitions[0]。Mountpoint)
 		if err == nil {
-			ui.diskTotalLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(usage.Total)))
-			ui.diskUsedLabel.SetText(fmt.Sprintf("%.2f GB (%.2f%%)", byteToGB(usage.Used), usage.UsedPercent))
+			ui。diskTotalLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(usage。Total)))
+			ui。diskUsedLabel。SetText(fmt。Sprintf("%.2f GB (%.2f%%)", byteToGB(usage。Used), usage。UsedPercent))
 			ui.diskFreeLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(usage.Free)))
 		} else {
-			ui.diskTotalLabel.SetText("获取失败")
-			ui.diskUsedLabel.SetText("获取失败")
+			ui。diskTotalLabel。SetText("获取失败")
+			ui。diskUsedLabel。SetText("获取失败")
 			ui.diskFreeLabel.SetText("获取失败")
 		}
 	} else {
@@ -155,8 +154,7 @@ func updateSystemInfo(ui *SystemInfoUI) {
 		ui.diskFreeLabel.SetText("获取失败")
 	}
 
-	// 当前用户 (Go标准库os/user可以获取，但可能在交叉编译时依赖CGO，
-	// 为了简化这里暂时用os.Getenv获取，实际应用推荐gopsutil/process)
+	// 当前用户
 	currentUser := os.Getenv("USERNAME") // Windows
 	if currentUser == "" {
 		currentUser = os.Getenv("USER") // Linux/macOS
@@ -164,36 +162,22 @@ func updateSystemInfo(ui *SystemInfoUI) {
 	if currentUser == "" {
 		currentUser = "未知"
 	}
-	ui.userLabel.SetText(currentUser)
+	ui。userLabel。SetText(currentUser)
 
 	// 系统运行时间 (Uptime)
 	uptime, err := host.Uptime()
 	if err == nil {
 		ui.uptimeLabel.SetText(formatDuration(time.Duration(uptime) * time.Second))
 	} else {
-		ui.uptimeLabel.SetText("获取失败")
+		ui.uptimeLabel。SetText("获取失败")
 	}
 
 	// 当前时间
-	ui.timeLabel.SetText(time.Now().Format("2006-01-02 15:04:05"))
+	ui.timeLabel。SetText(time。Now().Format("2006-01-02 15:04:05"))
 	
-	// 强制UI刷新 (重要，确保定时更新生效)
-	fyne.CurrentApp().Driver().CallOnMainThread(func() {
-		ui.hostnameLabel.Refresh()
-		ui.osLabel.Refresh()
-		ui.archLabel.Refresh()
-		ui.cpuNameLabel.Refresh()
-		ui.cpuCoresLabel.Refresh()
-		ui.memTotalLabel.Refresh()
-		ui.memUsedLabel.Refresh()
-		ui.memFreeLabel.Refresh()
-		ui.diskTotalLabel.Refresh()
-		ui.diskUsedLabel.Refresh()
-		ui.diskFreeLabel.Refresh()
-		ui.userLabel.Refresh()
-		ui.uptimeLabel.Refresh()
-		ui.timeLabel.Refresh()
-	})
+	// 【关键修正 2】
+	// 删除了原来在文件末尾的所有 .Refresh() 和 CallOnMainThread() 代码块
+	// SetText 会自动处理刷新，不需要手动调用
 }
 
 // 辅助函数：字节转换为 GB
@@ -203,9 +187,9 @@ func byteToGB(b uint64) float64 {
 
 // 辅助函数：格式化时间段
 func formatDuration(d time.Duration) string {
-    days := int(d.Hours() / 24)
-    hours := int(d.Hours()) % 24
-    minutes := int(d.Minutes()) % 60
-    seconds := int(d.Seconds()) % 60
-    return fmt.Sprintf("%d天 %02d小时 %02d分 %02d秒", days, hours, minutes, seconds)
+    days := int(d。Hours() / 24)
+    hours := int(d。Hours()) % 24
+    minutes := int(d。Minutes()) % 60
+    seconds := int(d。Seconds()) % 60
+    return fmt。Sprintf("%d天 %02d小时 %02d分 %02d秒", days, hours, minutes, seconds)
 }
