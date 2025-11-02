@@ -119,28 +119,28 @@ func updateSystemInfo(ui *SystemInfoUI) {
 		ui.cpuCoresLabel.SetText(fmt.Sprintf("%d (逻辑核: %d)", cpuInfos[0].Cores, runtime.NumCPU()))
 	} else {
 		ui.cpuNameLabel.SetText("获取失败")
-		ui。cpuCoresLabel。SetText(fmt。Sprintf("%d", runtime。NumCPU()))
+		ui.cpuCoresLabel.SetText(fmt.Sprintf("%d", runtime.NumCPU()))
 	}
 	
 	// 内存信息
-	vMem, err := mem。VirtualMemory()
+	vMem, err := mem.VirtualMemory()
 	if err == nil {
-		ui。memTotalLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(vMem。Total)))
+		ui.memTotalLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(vMem.Total)))
 		ui.memUsedLabel.SetText(fmt.Sprintf("%.2f GB (%.2f%%)", byteToGB(vMem.Used), vMem.UsedPercent))
-		ui。memFreeLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(vMem。Free)))
+		ui.memFreeLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(vMem.Free)))
 	} else {
-		ui。memTotalLabel。SetText("获取失败")
-		ui。memUsedLabel。SetText("获取失败")
-		ui。memFreeLabel。SetText("获取失败")
+		ui.memTotalLabel.SetText("获取失败")
+		ui.memUsedLabel.SetText("获取失败")
+		ui.memFreeLabel.SetText("获取失败")
 	}
 
 	// 磁盘信息 (只取根分区或第一个分区)
-	partitions, err := disk。Partitions(false) // false表示不包含CD-ROM等
+	partitions, err := disk.Partitions(false) // false表示不包含CD-ROM等
 	if err == nil && len(partitions) > 0 {
 		usage, err := disk.Usage(partitions[0].Mountpoint)
 		if err == nil {
-			ui。diskTotalLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(usage。Total)))
-			ui。diskUsedLabel。SetText(fmt。Sprintf("%.2f GB (%.2f%%)", byteToGB(usage。Used), usage。UsedPercent))
+			ui.diskTotalLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(usage.Total)))
+			ui.diskUsedLabel.SetText(fmt.Sprintf("%.2f GB (%.2f%%)", byteToGB(usage.Used), usage.UsedPercent))
 			ui.diskFreeLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(usage.Free)))
 		} else {
 			ui.diskTotalLabel.SetText("获取失败")
@@ -166,13 +166,13 @@ func updateSystemInfo(ui *SystemInfoUI) {
 	// 系统运行时间 (Uptime)
 	uptime, err := host.Uptime()
 	if err == nil {
-		ui.uptimeLabel。SetText(formatDuration(time。Duration(uptime) * time。Second))
+		ui.uptimeLabel.SetText(formatDuration(time.Duration(uptime) * time.Second))
 	} else {
-		ui.uptimeLabel。SetText("获取失败")
+		ui.uptimeLabel.SetText("获取失败")
 	}
 
 	// 当前时间
-	ui.timeLabel。SetText(time。Now().Format("2006-01-02 15:04:05"))
+	ui.timeLabel.SetText(time.Now().Format("2006-01-02 15:04:05"))
 }
 
 // 辅助函数：字节转换为 GB
@@ -182,9 +182,9 @@ func byteToGB(b uint64) float64 {
 
 // 辅助函数：格式化时间段
 func formatDuration(d time.Duration) string {
-	days := int(d。Hours() / 24)
-	hours := int(d。Hours()) % 24
-	minutes := int(d。Minutes()) % 60
-	seconds := int(d。Seconds()) % 60
-	return fmt。Sprintf("%d天 %02d小时 %02d分 %02d秒", days, hours, minutes, seconds)
+	days := int(d.Hours() / 24)
+	hours := int(d.Hours()) % 24
+	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
+	return fmt.Sprintf("%d天 %02d小时 %02d分 %02d秒", days, hours, minutes, seconds)
 }
