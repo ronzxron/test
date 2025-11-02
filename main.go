@@ -87,11 +87,10 @@ func main() {
 	// 定时更新信息 (每5秒)
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
 		for range ticker.C {
-			// 使用 App.RunOnMain 来确保 UI 更新在主线程上执行
-			fyne.CurrentApp().RunOnMain(func() {
-				updateSystemInfo(ui)
-			})
+			// 直接更新，Fyne的Label是线程安全的
+			updateSystemInfo(ui)
 		}
 	}()
 
