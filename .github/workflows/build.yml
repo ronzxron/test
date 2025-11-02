@@ -1,0 +1,52 @@
+name: Build Go EXE for Windows
+
+# 触发器：
+# 1. 当有代码推送到 'main' 分支时自动触发
+# 2. 允许你在 GitHub 页面上手动触发 (workflow_dispatch)
+on:
+  push:
+    branches: [ "main" ] # 注意：如果你的默认分支叫 "master"，请把这里改成 "master"
+  workflow_dispatch:
+
+jobs:
+  build-windows-exe:
+    # 运行在最新的 Windows 虚拟机上
+    # (Fyne GUI 应用必须在 Windows 上编译才能得到 .exe)
+    runs-on: windows-latest
+
+    steps:
+      # 第1步：检出代码
+      # 把你的 main.go, go.mod 等文件下载到虚拟机上
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 第2步：设置 Go 环境
+      # 安装 Go 1.21 (你可以根据需要修改版本)
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21' 
+
+      # 第3步：下载 Go 依赖
+      # 根据 go.mod 和 go.sum 下载 Fyne 和 gopsutil
+      - name: Download Go dependencies
+        run: go mod tidy
+
+      # 第4步：编译 Go 应用为 .exe
+      # 这是最关键的一步
+      - name: Build Go executable
+        run: go build -v -o SystemInfo.exe -ldflags="-H windowsgui" .
+        # -v: 显示详细编译过程
+        # -o SystemInfo.exe: 指定输出的文件名为 SystemInfo.exe
+        # -ldflags="-H windowsgui": 这是一个Fyne GUI应用的“魔法”参数，
+        #                          它的作用是让 .exe 运行时，不会弹出一个黑色的命令行窗口。
+
+      # 第5步：上传编译好的 .exe 文件
+      # 把 SystemInfo.exe 打包，让你可以在 Actions 页面下载
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # 下载的 zip 包会叫这个名字
+          name: windows-executable
+          # 要打包上传的文件路径 (就是上一步生成的 .exe)
+          path: SystemInfo.exe
