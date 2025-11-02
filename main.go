@@ -84,7 +84,6 @@ func main() {
 	// 首次更新信息 (在主线程上)
 	updateSystemInfo(ui)
 
-	// 【关键修正 1】
 	// 定时更新信息 (每5秒)
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
@@ -120,32 +119,32 @@ func updateSystemInfo(ui *SystemInfoUI) {
 		ui.cpuCoresLabel.SetText(fmt.Sprintf("%d (逻辑核: %d)", cpuInfos[0].Cores, runtime.NumCPU()))
 	} else {
 		ui.cpuNameLabel.SetText("获取失败")
-		ui.cpuCoresLabel.SetText(fmt.Sprintf("%d", runtime.NumCPU()))
+		ui。cpuCoresLabel。SetText(fmt。Sprintf("%d", runtime。NumCPU()))
 	}
 	
 	// 内存信息
 	vMem, err := mem。VirtualMemory()
 	if err == nil {
 		ui。memTotalLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(vMem。Total)))
-		ui。memUsedLabel。SetText(fmt。Sprintf("%.2f GB (%.2f%%)", byteToGB(vMem。Used), vMem。UsedPercent))
+		ui.memUsedLabel.SetText(fmt.Sprintf("%.2f GB (%.2f%%)", byteToGB(vMem.Used), vMem.UsedPercent))
 		ui。memFreeLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(vMem。Free)))
 	} else {
 		ui。memTotalLabel。SetText("获取失败")
-		ui.memUsedLabel.SetText("获取失败")
+		ui。memUsedLabel。SetText("获取失败")
 		ui。memFreeLabel。SetText("获取失败")
 	}
 
 	// 磁盘信息 (只取根分区或第一个分区)
 	partitions, err := disk。Partitions(false) // false表示不包含CD-ROM等
 	if err == nil && len(partitions) > 0 {
-		usage, err := disk。Usage(partitions[0]。Mountpoint)
+		usage, err := disk.Usage(partitions[0].Mountpoint)
 		if err == nil {
 			ui。diskTotalLabel。SetText(fmt。Sprintf("%.2f GB", byteToGB(usage。Total)))
 			ui。diskUsedLabel。SetText(fmt。Sprintf("%.2f GB (%.2f%%)", byteToGB(usage。Used), usage。UsedPercent))
 			ui.diskFreeLabel.SetText(fmt.Sprintf("%.2f GB", byteToGB(usage.Free)))
 		} else {
-			ui。diskTotalLabel。SetText("获取失败")
-			ui。diskUsedLabel。SetText("获取失败")
+			ui.diskTotalLabel.SetText("获取失败")
+			ui.diskUsedLabel.SetText("获取失败")
 			ui.diskFreeLabel.SetText("获取失败")
 		}
 	} else {
@@ -162,22 +161,18 @@ func updateSystemInfo(ui *SystemInfoUI) {
 	if currentUser == "" {
 		currentUser = "未知"
 	}
-	ui。userLabel。SetText(currentUser)
+	ui.userLabel.SetText(currentUser)
 
 	// 系统运行时间 (Uptime)
 	uptime, err := host.Uptime()
 	if err == nil {
-		ui.uptimeLabel.SetText(formatDuration(time.Duration(uptime) * time.Second))
+		ui.uptimeLabel。SetText(formatDuration(time。Duration(uptime) * time。Second))
 	} else {
 		ui.uptimeLabel。SetText("获取失败")
 	}
 
 	// 当前时间
 	ui.timeLabel。SetText(time。Now().Format("2006-01-02 15:04:05"))
-	
-	// 【关键修正 2】
-	// 删除了原来在文件末尾的所有 .Refresh() 和 CallOnMainThread() 代码块
-	// SetText 会自动处理刷新，不需要手动调用
 }
 
 // 辅助函数：字节转换为 GB
